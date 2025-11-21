@@ -6,7 +6,7 @@ from ai.score import evaluate_board
 AI = 1        # O (máy)
 PLAYER = -1   # X (người)
 EMPTY = 0
-SIZE = 15
+SIZE = 10
 
 
 class AIHard:
@@ -29,7 +29,7 @@ class AIHard:
     def check_win(self, board, player):
         """
         Kiểm tra player (1 hoặc -1) đã thắng chưa (5 quân liên tiếp).
-        board là numpy array 15x15.
+        board là numpy array 10x10.
         """
         n = SIZE
         win_len = 5
@@ -100,14 +100,14 @@ class AIHard:
 
         # Nếu bàn hoàn toàn trống
         if not moves:
-            moves.append((n // 2, n // 2))  # (7,7) trên bàn 15x15
+            moves.append((n // 2, n // 2))  # (5,5) trên bàn 10x10
 
         return moves
 
     # ---------------- minimax (METHOD) ----------------
     def minimax(self, board, depth, alpha, beta, maximizing, current_player):
         """
-        Minimax + alpha-beta trên board (numpy 15x15).
+        Minimax + alpha-beta trên board (numpy 10x10).
         current_player: self.ai (1) hoặc self.human (-1).
         maximizing: True nếu node MAX (AI), False nếu node MIN (người).
         """
@@ -176,7 +176,7 @@ class AIHard:
     def find_best_move(self, board):
         """
         Tìm nước đi tốt nhất cho AI (self.ai) trên 'board'.
-        board: numpy array 15x15.
+        board: numpy array 10x10.
         Trả về (r, c) hoặc None nếu không có nước đi.
         """
         b = np.array(board, copy=True)

@@ -67,7 +67,7 @@ def evaluate_board(board, player):
     """
     Đánh giá toàn bộ bàn cờ cho `player` (1 hoặc -1).
     Trả về score = score(player) - score(opponent).
-    board: numpy array shape (15,15) với values {1, -1, 0}
+    board: numpy array shape (10,10) với values {1, -1, 0}
     """
     b = np.asarray(board, dtype=int)
     n = b.shape[0]

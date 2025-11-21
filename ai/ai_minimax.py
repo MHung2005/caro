@@ -5,7 +5,7 @@ from ai.score import evaluate_board
 AI = 1
 PLAYER = -1
 EMPTY = 0
-SIZE = 15
+SIZE = 10
 
 
 class AIMinimax:

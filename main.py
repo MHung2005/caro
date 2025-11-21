@@ -7,11 +7,12 @@ from ai.ai_minimax import AIMinimax
 from ai.ai_hard import AIHard
 
 size_of_board = 600
-symbol_size = (size_of_board / 15 - size_of_board / 30) / 2
+symbol_size = (size_of_board / 10 - size_of_board / 30) / 2
 symbol_thickness = 3
 symbol_X_color = '#EE4035'
 symbol_O_color = '#0492CF'
 Green_color = '#7BC043'
+num_board = 10
 
 
 class Tic_Tac_Toe():
@@ -56,7 +57,7 @@ class Tic_Tac_Toe():
         # self.ai trỏ tới instance hiện tại (mặc định Hard)
         self.ai = self.ai_alpha_beta
 
-        self.board_status = np.zeros(shape=(15, 15))
+        self.board_status = np.zeros(shape=(num_board, num_board))
 
         self.player_X_starts = True
         self.reset_board = False
@@ -82,18 +83,18 @@ class Tic_Tac_Toe():
 
 
     def initialize_board(self):
-        for i in range(14):
-            self.canvas.create_line((i + 1) * size_of_board / 15, 0, (i + 1) * size_of_board / 15, size_of_board)
+        for i in range(num_board - 1):
+            self.canvas.create_line((i + 1) * size_of_board / num_board, 0, (i + 1) * size_of_board / num_board, size_of_board)
 
-        for i in range(14):
-            self.canvas.create_line(0, (i + 1) * size_of_board / 15, size_of_board, (i + 1) * size_of_board / 15)
+        for i in range(num_board - 1):
+            self.canvas.create_line(0, (i + 1) * size_of_board / num_board, size_of_board, (i + 1) * size_of_board / num_board)
 
     def play_again(self):
         self.canvas.delete("all")
         self.initialize_board()
         self.player_X_starts = True
         self.player_X_turns = self.player_X_starts
-        self.board_status = np.zeros(shape=(15, 15))
+        self.board_status = np.zeros(shape=(num_board, num_board))
 
         self.reset_board = False
         self.gameover = False
@@ -158,11 +159,11 @@ class Tic_Tac_Toe():
     # ------------------------------------------------------------------
     def convert_logical_to_grid_position(self, logical_position):
         logical_position = np.array(logical_position, dtype=int)
-        return (size_of_board / 15) * logical_position + size_of_board / 30
+        return (size_of_board / num_board) * logical_position + size_of_board / (num_board*2)
 
     def convert_grid_to_logical_position(self, grid_position):
         grid_position = np.array(grid_position)
-        return np.array(grid_position // (size_of_board / 15), dtype=int)
+        return np.array(grid_position // (size_of_board / num_board), dtype=int)
 
     def is_grid_occupied(self, logical_position):
         if self.board_status[logical_position[0]][logical_position[1]] == 0:
@@ -172,7 +173,7 @@ class Tic_Tac_Toe():
 
     def is_winner(self, player):
 
-        n = 15
+        n = 10
         win_len = 5
 
         for r in range(n):
