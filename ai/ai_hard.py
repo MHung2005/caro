@@ -18,6 +18,7 @@ class AIHard:
         self.ai = ai_player
         self.human = -ai_player
         self.max_depth = max_depth
+        self.node_count = 0
 
     # ---------------- is_full (METHOD) ----------------
     def is_full(self, board):
@@ -106,6 +107,7 @@ class AIHard:
 
     # ---------------- minimax (METHOD) ----------------
     def minimax(self, board, depth, alpha, beta, maximizing, current_player):
+        self.node_count += 1
         """
         Minimax + alpha-beta trên board (numpy 10x10).
         current_player: self.ai (1) hoặc self.human (-1).
@@ -207,5 +209,6 @@ class AIHard:
 
     # ---------------- choose_move (METHOD) ----------------
     def choose_move(self, board_status):
+        self.node_count = 0
         board_copy = np.array(board_status, copy=True)
         return self.find_best_move(board_copy)
