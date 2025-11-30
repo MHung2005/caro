@@ -7,13 +7,15 @@ PLAYER = -1
 EMPTY = 0
 SIZE = 10
 
-
 class AIMinimax:
     def __init__(self, ai_player=AI, max_depth=2):
         self.ai = ai_player
         self.human = -ai_player
         self.max_depth = max_depth
-
+    #----------count node----------
+        self.node_count = 0
+    def reset_counter(self):
+        self.node_count = 0
     # ----------- is_full -----------
     def is_full(self, board):
         return not (np.asarray(board) == EMPTY).any()
@@ -77,6 +79,8 @@ class AIMinimax:
 
     # ----- MAX-VALUE(state) -----
     def max_value(self, board, depth):
+        self.node_count += 1
+
         if self.check_win(board, self.ai):
             return 10**9
         if self.check_win(board, self.human):
@@ -96,6 +100,8 @@ class AIMinimax:
 
     # ----- MIN-VALUE(state) -----
     def min_value(self, board, depth):
+        self.node_count += 1
+
         if self.check_win(board, self.ai):
             return 10**9
         if self.check_win(board, self.human):
@@ -112,9 +118,10 @@ class AIMinimax:
             board[x][y] = EMPTY
 
         return v
-
+        
     # ----- Minimax-Decision -----
     def minimax_decision(self, board):
+
         moves = self.generate_moves(board)
         best_value = -math.inf
         best_move = None
@@ -131,5 +138,6 @@ class AIMinimax:
         return best_move
 
     def choose_move(self, board):
+        self.reset_counter()
         board_copy = np.array(board, copy=True)
         return self.minimax_decision(board_copy)
