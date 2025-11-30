@@ -32,10 +32,10 @@ class Tic_Tac_Toe():
         self.ai_level_var = StringVar(value="Hard")  # mặc định Hard
         rb_easy = Radiobutton(control_frame, text="Easy", variable=self.ai_level_var, value="Easy", command=self.change_ai_level)
         rb_easy.pack(side=LEFT)
-        rb_easy = Radiobutton(control_frame, text="Minimax", variable=self.ai_level_var, value="Minimax", command=self.change_ai_level)
-        rb_easy.pack(side=LEFT)
-        rb_hard = Radiobutton(control_frame, text="alpha-beta", variable=self.ai_level_var, value="alpha-beta", command=self.change_ai_level)
-        rb_hard.pack(side=LEFT)
+        rb_minimax = Radiobutton(control_frame, text="Minimax", variable=self.ai_level_var, value="Minimax", command=self.change_ai_level)
+        rb_minimax.pack(side=LEFT)
+        rb_alphabeta = Radiobutton(control_frame, text="alpha-beta", variable=self.ai_level_var, value="alpha-beta", command=self.change_ai_level)
+        rb_alphabeta.pack(side=LEFT)
 
         new_btn = Button(control_frame, text='New Game', command=self.play_again)
         new_btn.pack(side=LEFT, padx=8)
@@ -171,14 +171,15 @@ class Tic_Tac_Toe():
         else:
             return True
 
-    def is_winner(self, player):
+    def is_winner(self, player_val):
 
         n = 10
         win_len = 5
 
         for r in range(n):
             for c in range(n):
-                player_val = self.board_status[r][c]
+                if self.board_status[r][c] != player_val:
+                    continue
                 if player_val == 0 or player_val is None:
                     continue
 
@@ -204,9 +205,9 @@ class Tic_Tac_Toe():
         return tie
 
     def is_gameover(self):
-        self.X_wins = self.is_winner('X')
+        self.X_wins = self.is_winner(-1)
         if not self.X_wins:
-            self.O_wins = self.is_winner('O')
+            self.O_wins = self.is_winner(1)
 
         if not self.O_wins:
             self.tie = self.is_tie()
