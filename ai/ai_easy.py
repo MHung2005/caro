@@ -11,4 +11,3 @@ class AIEasy:
             if board_status[r][c] == 0
         ]
         return random.choice(empty_cells)
-

@@ -62,6 +62,12 @@ class Tic_Tac_Toe():
         self.player_X_starts = True
         self.reset_board = False
         self.gameover = False
+        
+        # Node counter log
+        self.o_move_index = 1  # T2, T4, T6...
+        self.node_text = Text(self.window, height=10, width=40, state='disabled')
+        self.node_text.pack(anchor='nw', padx=10, pady=10)
+        
         self.tie = False
         self.X_wins = False
         self.O_wins = False
@@ -101,6 +107,13 @@ class Tic_Tac_Toe():
         self.tie = False
         self.X_wins = False
         self.O_wins = False
+        
+        # reset node count log
+        self.o_move_index = 1
+        self.node_text.config(state='normal')
+        self.node_text.delete(1.0, END)
+        self.node_text.config(state='disabled')
+
 
     # ------------------------------------------------------------------
     # Drawing Functions:
@@ -148,6 +161,14 @@ class Tic_Tac_Toe():
         score_text += 'Tie                    : ' + str(self.tie_score)
         self.canvas.create_text(size_of_board / 2, 3 * size_of_board / 4, font="cmr 30 bold", fill=Green_color,
                                 text=score_text)
+        
+        # in log node counts khi game kết thúc
+        print("=== NODE COUNT LOG ===")
+        for entry in self.node_log:
+            t_label, n_empty, formula_nodes, actual_nodes = entry
+            print(f"T{t_label}: E={n_empty}, Formula={formula_nodes}, Actual={actual_nodes}")
+
+        
         self.reset_board = True
 
         score_text = 'Click to play again \n'
@@ -250,18 +271,65 @@ class Tic_Tac_Toe():
 
             # Tính toán nước đi AI trên thread nền
             def compute_ai_move(board_snapshot, ai_instance):
+                # số ô trống trước khi AI tính
+                n_empty = int(np.count_nonzero(board_snapshot == 0))
+
+                # tính node count theo công thức của bạn
+                node_value = self.compute_node_count(n_empty)
+
+                # tính T-label: T2, T4, T6...
+                t_label = 2 * self.o_move_index
+
                 ai_move = ai_instance.choose_move(board_snapshot)
+
                 def apply_move():
                     if ai_move is not None and not self.is_grid_occupied(ai_move):
                         self.draw_O(ai_move)
                         self.board_status[ai_move[0]][ai_move[1]] = 1
                         self.player_X_turns = True
+
+                        # ghi log
+                        self.append_node_log(t_label, node_value)
+
+                        # tăng lượt AI
+                        self.o_move_index += 1
+
                         if self.is_gameover():
                             self.display_gameover()
-                self.window.after(0, apply_move)
+                    else:
+                        # vẫn ghi log nếu lỗi
+                        self.append_node_log(t_label, node_value)
+
+                self.window.after(10, apply_move)
 
             board_copy = np.array(self.board_status, copy=True)
             threading.Thread(target=compute_ai_move, args=(board_copy, self.ai), daemon=True).start()
+                
+    def compute_node_count(self, empty_cells):
+        n = int(empty_cells)
+        return 1 + n + n * (n - 1)
+
+    def show_node_count(self, t_label, n, formula_nodes, actual_nodes=None):
+        text = f"T{t_label}: E={n}  |  Formula={formula_nodes}"
+        if actual_nodes is not None:
+            text += f"  |  Actual={actual_nodes}"
+        else:
+            text += "  |  Actual=N/A"
+
+        # tạo label nếu chưa có
+        if self.node_label is None:
+            # đặt ở trên cùng, phía trái (bạn có thể điều chỉnh vị trí)
+            self.node_label = Label(self.window, text=text, fg="blue", font=("Arial", 12))
+            self.node_label.pack(anchor='nw', padx=10, pady=(6,0))
+        else:
+            self.node_label.config(text=text)
+            
+    def append_node_log(self, t_label, value):
+        self.node_text.config(state='normal')
+        self.node_text.insert(END, f"T{t_label} = {value}\n")
+        self.node_text.config(state='disabled')
+        self.node_text.see(END)
+
 
 game_instance = Tic_Tac_Toe()
 game_instance.mainloop()
