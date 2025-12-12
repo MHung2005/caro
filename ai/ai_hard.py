@@ -211,4 +211,4 @@ class AIHard:
     def choose_move(self, board_status):
         self.node_count = 0
         board_copy = np.array(board_status, copy=True)
-        return self.find_best_move(board_copy)
+        return self.find_best_move(board_copy), self.node_count
