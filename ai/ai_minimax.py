@@ -140,4 +140,4 @@ class AIMinimax:
     def choose_move(self, board):
         self.reset_counter()
         board_copy = np.array(board, copy=True)
-        return self.minimax_decision(board_copy)
+        return self.minimax_decision(board_copy), self.node_count
