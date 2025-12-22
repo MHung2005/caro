@@ -6,13 +6,28 @@ from ai.ai_easy import AIEasy
 from ai.ai_minimax import AIMinimax
 from ai.ai_hard import AIHard
 
-size_of_board = 600
-symbol_size = (size_of_board / 10 - size_of_board / 30) / 2
-symbol_thickness = 3
-symbol_X_color = '#EE4035'
-symbol_O_color = '#0492CF'
-Green_color = '#7BC043'
-num_board = 10
+# Centralized config
+from config import (
+    BOARD_SIZE_PX,
+    GRID_SIZE,
+    SYMBOL_SIZE,
+    SYMBOL_THICKNESS,
+    COLOR_X,
+    COLOR_O,
+    COLOR_GREEN,
+)
+
+# Keep existing local names for minimal code change
+size_of_board = BOARD_SIZE_PX
+num_board = GRID_SIZE
+symbol_size = SYMBOL_SIZE
+symbol_thickness = SYMBOL_THICKNESS
+symbol_X_color = COLOR_X
+symbol_O_color = COLOR_O
+Green_color = COLOR_GREEN
+
+# Game utilities
+from game import check_winner as game_check_winner, is_tie as game_is_tie
 
 
 class Tic_Tac_Toe():
@@ -29,7 +44,8 @@ class Tic_Tac_Toe():
 
         Label(control_frame, text="Chế độ: ").pack(side=LEFT, padx=(0,8))
 
-        self.ai_level_var = StringVar(value="Hard")  # mặc định Hard
+        # Mặc định chọn đúng mức đang dùng: alpha-beta
+        self.ai_level_var = StringVar(value="alpha-beta")
         rb_easy = Radiobutton(control_frame, text="Easy", variable=self.ai_level_var, value="Easy", command=self.change_ai_level)
         rb_easy.pack(side=LEFT)
         rb_minimax = Radiobutton(control_frame, text="Minimax", variable=self.ai_level_var, value="Minimax", command=self.change_ai_level)
@@ -40,8 +56,15 @@ class Tic_Tac_Toe():
         new_btn = Button(control_frame, text='New Game', command=self.play_again)
         new_btn.pack(side=LEFT, padx=8)
 
-        # Canvas và binding click
-        self.canvas = Canvas(self.window, width=size_of_board, height=size_of_board)
+        # Layout: board (left) + log (right)
+        main_frame = Frame(self.window)
+        main_frame.pack(padx=8, pady=(0, 8), anchor='nw')
+
+        board_frame = Frame(main_frame)
+        board_frame.pack(side=LEFT)
+
+        # Canvas và binding click (ở bên trái)
+        self.canvas = Canvas(board_frame, width=size_of_board, height=size_of_board)
         self.canvas.pack()
         self.canvas.bind('<Button-1>', self.click)
 
@@ -63,10 +86,23 @@ class Tic_Tac_Toe():
         self.reset_board = False
         self.gameover = False
         
-        # Node counter log
+        # Node counter log (auto-fit; no scrolling) — đặt bên phải
         self.o_move_index = 1  # T2, T4, T6...
-        self.node_text = Text(self.window, height=10, width=40, state='disabled')
-        self.node_text.pack(anchor='nw', padx=10, pady=10)
+        sidebar_frame = Frame(main_frame)
+        sidebar_frame.pack(side=LEFT, padx=12, fill='y')
+        self.node_text = Text(
+            sidebar_frame,
+            height=12,
+            width=42,
+            state='disabled',
+            font=('Consolas', 13),
+            wrap='word',
+            bg='#f7f7f8'
+        )
+        self.node_text.pack(side=TOP, fill='y')
+        # Styling tags for entries and headers
+        self.node_text.tag_configure('header', font=('Consolas', 14, 'bold'))
+        self.node_text.tag_configure('entry', font=('Consolas', 13))
         
         self.game_count = 1  
         self.log_new_game_start()
@@ -184,37 +220,11 @@ class Tic_Tac_Toe():
             return True
 
     def is_winner(self, player_val):
-
-        n = 10
-        win_len = 5
-
-        for r in range(n):
-            for c in range(n):
-                if self.board_status[r][c] != player_val:
-                    continue
-                if player_val == 0 or player_val is None:
-                    continue
-
-                if c + win_len <= n and all(self.board_status[r][c + k] == player_val for k in range(win_len)):
-                    return player_val
-
-                if r + win_len <= n and all(self.board_status[r + k][c] == player_val for k in range(win_len)):
-                    return player_val
-
-                if r + win_len <= n and c + win_len <= n and all(self.board_status[r + k][c + k] == player_val for k in range(win_len)):
-                    return player_val
-
-                if r + win_len <= n and c - win_len + 1 >= 0 and all(self.board_status[r + k][c - k] == player_val for k in range(win_len)):
-                    return player_val
-
-        return None
+        # Use centralized winner check; return bool for readability
+        return bool(game_check_winner(self.board_status, player_val))
 
     def is_tie(self):
-        r, c = np.where(self.board_status == 0)
-        tie = False
-        if len(r) == 0:
-            tie = True
-        return tie
+        return game_is_tie(self.board_status)
 
     def is_gameover(self):
         self.X_wins = self.is_winner(-1)
@@ -267,24 +277,23 @@ class Tic_Tac_Toe():
                 # tính T-label: T2, T4, T6...
                 t_label = 2 * self.o_move_index
 
-                ai_move, self.node_count = ai_instance.choose_move(board_snapshot)            
+                ai_move, node_count = ai_instance.choose_move(board_snapshot)
                 def apply_move():
+                    moved = False
                     if ai_move is not None and not self.is_grid_occupied(ai_move):
                         self.draw_O(ai_move)
                         self.board_status[ai_move[0]][ai_move[1]] = 1
                         self.player_X_turns = True
+                        moved = True
 
-                        # ghi log
-                        self.append_node_log(t_label, self.node_count)
+                    # Ghi log luôn, dùng node_count cục bộ để tránh sai lệch
+                    self.append_node_log(t_label, node_count)
 
-                        # tăng lượt AI
-                        self.o_move_index += 1
+                    # tăng lượt AI chỉ khi đã hoàn tất lượt xử lý này
+                    self.o_move_index += 1
 
-                        if self.is_gameover():
-                            self.display_gameover()
-                    #else:
-                        # vẫn ghi log nếu lỗi
-                    #   self.append_node_log(t_label, node_value)
+                    if moved and self.is_gameover():
+                        self.display_gameover()
 
                 self.window.after(10, apply_move)
 
@@ -293,15 +302,26 @@ class Tic_Tac_Toe():
             
     def append_node_log(self, t_label, value):
         self.node_text.config(state='normal')
-        self.node_text.insert(END, f"T{t_label} = {value}\n")
+        self.node_text.insert(END, f"T{t_label} = {value}\n", 'entry')
+        self.set_log_height_to_fit()
         self.node_text.config(state='disabled')
         self.node_text.see(END)
         
     def log_new_game_start(self):
-        """Hàm ghi log tiêu đề Game X"""
+        """Hàm ghi log tiêu đề Game Caro"""
         self.node_text.config(state='normal')
-        self.node_text.insert(END, "\n" + "="*8 + f" GAME {self.game_count} " + "="*8 + "\n")
+        self.node_text.insert(END, "\n" + "="*8 + f" GAME {self.game_count} " + "="*8 + "\n", 'header')
+        self.set_log_height_to_fit()
         self.node_text.config(state='disabled')
         self.node_text.see(END)
+
+    def set_log_height_to_fit(self):
+        """Tự động điều chỉnh chiều cao log để hiển thị hết nội dung."""
+        try:
+            lines = int(self.node_text.index('end-1c').split('.')[0])
+            # Đảm bảo tối thiểu 8 dòng và mở rộng để không cần trượt
+            self.node_text.config(height=max(8, lines))
+        except Exception:
+            pass
 game_instance = Tic_Tac_Toe()
 game_instance.mainloop()
